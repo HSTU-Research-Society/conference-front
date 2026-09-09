@@ -1,0 +1,6 @@
+{
+  "name": "HSTU Annual Research Conference",
+  "description": "Official annual international research conference series hosted by HSTU Research Society, with paper submissions and peer reviews managed via Microsoft CMT.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
