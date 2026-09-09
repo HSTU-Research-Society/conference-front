@@ -44,11 +44,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hsturs.org';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'HSTU Annual Research Conference | Official Portal',
-    template: '%s | HSTU Annual Research Conference',
+    default: 'HSTU Research Society | Analyze, Strategize, Improvise',
+    template: '%s | HSTU Research Society',
   },
   description:
-    'Official annual international research conference series hosted by HSTU Research Society, with paper submissions and peer reviews managed via Microsoft CMT.',
+    'Official platform of Hajee Mohammad Danesh Science and Technology University Research Society (HSTURS). Empowering future researchers through scientific innovation, academic publications, workshops, and global collaboration.',
   keywords: [
     'HSTU Research Society',
     'HSTURS',

@@ -8,19 +8,19 @@ import { motion } from 'motion/react';
 import { getFooterInfo, subscribeFooterInfo, FooterInfo, DEFAULT_FOOTER_INFO } from '@/lib/db';
 
 const defaultQuickLinks = [
-  { label: 'Conference Home', href: '/' },
-  { label: 'Microsoft CMT Portal', href: '#submission' },
-  { label: 'Important Dates', href: '#dates' },
-  { label: 'Call for Papers', href: '#tracks' },
-  { label: 'Keynote Speakers', href: '#speakers' },
+  { label: 'Home', href: '/' },
+  { label: 'About Us', href: '/about/leadership/executive' },
+  { label: 'Gallery', href: '/content/gallery' },
+  { label: 'Events', href: '/events/upcoming' },
+  { label: 'Contact', href: '/contact' },
 ];
 
 const defaultResourceLinks = [
-  { label: 'Technical Schedule', href: '#schedule' },
-  { label: 'Registration & Fees', href: '#registration' },
-  { label: 'Organizing Committee', href: '#committee' },
-  { label: 'Annual Series Archive', href: '#archive' },
-  { label: 'Venue & Travel Guide', href: '#venue' },
+  { label: 'Constitution', href: '/about/constitution' },
+  { label: 'History', href: '/about/history' },
+  { label: 'Magazine', href: '/content/magazine' },
+  { label: 'Certificate Verification', href: '/verification/certificate' },
+  { label: 'FAQ', href: '/contact/faq' },
 ];
 
 export function Footer() {

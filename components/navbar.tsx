@@ -5,22 +5,61 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X, ChevronDown, Search, ExternalLink } from 'lucide-react';
+import { Menu, X, ChevronDown, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SearchModal } from '@/components/search-modal';
-import { CMT_CONFIG } from '@/lib/conference-data';
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '#submission', label: 'Microsoft CMT' },
-  { href: '#dates', label: 'Dates' },
-  { href: '#tracks', label: 'Call for Papers' },
-  { href: '#speakers', label: 'Keynotes' },
-  { href: '#schedule', label: 'Schedule' },
-  { href: '#registration', label: 'Registration' },
-  { href: '#archive', label: 'Annual Series' },
-  { href: '#committee', label: 'Committee' },
+  {
+    label: 'About',
+    children: [
+      { 
+        label: 'Leadership',
+        subChildren: [
+          { href: '/about/leadership/executive', label: 'Executive' },
+          { href: '/about/leadership/alumni', label: 'Alumni' },
+          { href: '/about/leadership/advisory', label: 'Advisory' },
+          { href: '/about/leadership/taskforce', label: 'Taskforce' },
+        ]
+      },
+      { href: '/about/constitution', label: 'Constitution' },
+      { href: '/about/history', label: 'History' },
+    ],
+  },
+  {
+    label: 'Content',
+    children: [
+      { href: '/content/gallery', label: 'Gallery' },
+      { href: '/content/blog', label: 'Blog' },
+      { href: '/content/magazine', label: 'Magazine' },
+      { href: '/content/resources', label: 'Resources' },
+    ],
+  },
+  {
+    label: 'Event',
+    children: [
+      { href: '/events/archive', label: 'Archive' },
+      { href: '/events/upcoming', label: 'Upcoming' },
+      { href: '/events/notice', label: 'Notice' },
+    ],
+  },
+  {
+    label: 'Verification',
+    children: [
+      { href: '/verification/certificate', label: 'Certificate' },
+      { href: '/verification/membership', label: 'Membership' },
+    ],
+  },
+  {
+    label: 'Contact',
+    children: [
+      { href: '/contact', label: 'Contact Form' },
+      { href: '/contact/location', label: 'Location' },
+      { href: '/contact/faq', label: 'FAQ' },
+    ],
+  },
 ];
 
 export function Navbar() {
@@ -75,10 +114,7 @@ export function Navbar() {
               referrerPolicy="no-referrer"
             />
           </motion.div>
-          <div className="flex flex-col">
-            <span className="font-bold text-lg tracking-tight hidden sm:block leading-none">HSTU Conference</span>
-            <span className="text-[10px] text-blue-400 font-mono hidden sm:block tracking-wide">HSTU-ICSRIT 2026</span>
-          </div>
+          <span className="font-bold text-xl tracking-tight hidden sm:block">HSTU Research Society</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -154,15 +190,6 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <a
-            href={CMT_CONFIG.portalUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-600/25 transition-all"
-          >
-            <span>Submit (CMT)</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
           <ThemeToggle />
           <button 
             onClick={() => setSearchOpen(true)}

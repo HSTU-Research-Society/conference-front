@@ -1,251 +1,416 @@
 'use client';
 
-import * as React from 'react';
-import { motion } from 'motion/react';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, useInView } from 'motion/react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  Calendar, 
-  MapPin, 
-  ShieldCheck, 
-  ExternalLink, 
-  CheckCircle2, 
-  Clock, 
-  ArrowRight, 
-  FileText, 
-  Sparkles,
-  BookOpen,
-  Award,
-  Users
-} from 'lucide-react';
-import { CURRENT_EDITION, ANNUAL_EDITIONS, ConferenceEdition, CMT_CONFIG } from '@/lib/conference-data';
-import { EditionSwitcher } from '@/components/conference/edition-switcher';
-import { CmtPortalCard } from '@/components/conference/cmt-portal-card';
-import { PreflightChecklist } from '@/components/conference/preflight-checklist';
-import { DatesTimeline } from '@/components/conference/dates-timeline';
-import { TracksSection } from '@/components/conference/tracks-section';
-import { SpeakersSection } from '@/components/conference/speakers-section';
-import { ScheduleSection } from '@/components/conference/schedule-section';
-import { RegistrationSection } from '@/components/conference/registration-section';
-import { CommitteeSection } from '@/components/conference/committee-section';
-import { ArchiveSection } from '@/components/conference/archive-section';
-import { VenueSection } from '@/components/conference/venue-section';
+import { ArrowRight, Calendar, Users, Award, BookOpen, MapPin, CalendarPlus } from 'lucide-react';
+import { getLatestBlogs, getUpcomingEvents } from '@/lib/db';
+import { PartnersSection } from '@/components/partners-section';
 
-function SubmissionCountdown() {
-  const [timeLeft, setTimeLeft] = React.useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+function AnimatedCounter({ endValue, duration = 2000, suffix = "" }: { endValue: number, duration?: number, suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+
+    let startTimestamp: number | null = null;
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      
+      // easeOutExpo
+      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      
+      setCount(Math.floor(easeProgress * endValue));
+      
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    
+    window.requestAnimationFrame(step);
+  }, [endValue, duration, isInView]);
+
+  // Format with commas if over 999
+  const formatted = count >= 1000 ? count.toLocaleString() : count.toString();
+  return <span ref={ref}>{formatted}{suffix}</span>;
+}
+
+function TypewriterHeading() {
+  const [text, setText] = React.useState('');
+  const fullText = "ANALYZE\nSTRATEGIZE\nIMPROVISE";
 
   React.useEffect(() => {
-    // Target deadline: July 25, 2026, 23:59:59 GMT+6
-    const targetDate = new Date('2026-07-25T23:59:59+06:00').getTime();
-
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const diff = Math.max(0, targetDate - now);
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      setTimeLeft({ days, hours, minutes, seconds });
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
+    let i = 0;
+    const timeout = setTimeout(() => {
+      const timer = setInterval(() => {
+        i++;
+        setText(fullText.slice(0, i));
+        if (i >= fullText.length) clearInterval(timer);
+      }, 70);
+    }, 150);
+    return () => clearTimeout(timeout);
   }, []);
 
+  const renderLines = (content: string, isCursor = false) => {
+    const lines = content.split('\n');
+    return (
+      <div className="flex flex-col space-y-1">
+        {lines.map((line, idx) => (
+          <div key={idx} className="leading-[1.06] tracking-tight">
+            {idx === 1 ? (
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-info-light via-blue-500 to-indigo-500">
+                {line}
+              </span>
+            ) : (
+              <span>{line}</span>
+            )}
+            {isCursor && idx === lines.length - 1 && (
+              <span className="animate-pulse border-r-4 border-info-light ml-1 sm:ml-2 inline-block h-[0.75em] align-middle" />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-2xl bg-slate-950/70 border border-slate-800 shadow-inner">
-      <div className="flex flex-col items-center justify-center min-w-[52px] sm:min-w-[64px] px-2 py-1.5 rounded-xl bg-slate-900 border border-slate-800">
-        <span className="font-mono text-base sm:text-xl font-black text-white">{timeLeft.days}</span>
-        <span className="text-[9px] uppercase font-bold text-slate-400">Days</span>
+    <div className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-[76px] font-extrabold tracking-tight pt-2 pb-2 relative w-full text-left">
+      <div className="opacity-0 pointer-events-none select-none text-left" aria-hidden="true">
+        {renderLines(fullText)}
       </div>
-      <span className="text-slate-600 font-bold">:</span>
-      <div className="flex flex-col items-center justify-center min-w-[52px] sm:min-w-[64px] px-2 py-1.5 rounded-xl bg-slate-900 border border-slate-800">
-        <span className="font-mono text-base sm:text-xl font-black text-white">{timeLeft.hours}</span>
-        <span className="text-[9px] uppercase font-bold text-slate-400">Hours</span>
-      </div>
-      <span className="text-slate-600 font-bold">:</span>
-      <div className="flex flex-col items-center justify-center min-w-[52px] sm:min-w-[64px] px-2 py-1.5 rounded-xl bg-slate-900 border border-slate-800">
-        <span className="font-mono text-base sm:text-xl font-black text-white">{timeLeft.minutes}</span>
-        <span className="text-[9px] uppercase font-bold text-slate-400">Mins</span>
-      </div>
-      <span className="text-slate-600 font-bold">:</span>
-      <div className="flex flex-col items-center justify-center min-w-[52px] sm:min-w-[64px] px-2 py-1.5 rounded-xl bg-slate-900 border border-slate-800">
-        <span className="font-mono text-base sm:text-xl font-black text-emerald-400">{timeLeft.seconds}</span>
-        <span className="text-[9px] uppercase font-bold text-emerald-400/80">Secs</span>
+      <div className="absolute top-0 left-0 w-full h-full pt-2 text-left">
+        {renderLines(text, true)}
       </div>
     </div>
   );
 }
 
-export default function ConferenceHomePage() {
-  const [activeEdition, setActiveEdition] = React.useState<ConferenceEdition>(CURRENT_EDITION);
+export default function Home() {
+  const [blogs, setBlogs] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
 
+  useEffect(() => {
+    async function loadData() {
+      const b = await getLatestBlogs(3);
+      const e = await getUpcomingEvents(3);
+      setBlogs(b);
+      setUpcomingEvents(e);
+    }
+    loadData();
+  }, []);
   return (
-    <div className="min-h-screen bg-[#0a0d14] text-slate-100 selection:bg-blue-600 selection:text-white pt-24 pb-20">
-      <div className="container mx-auto px-4 sm:px-6 max-w-7xl space-y-12 sm:space-y-16">
-        
-        {/* HERO SECTION */}
-        <section className="relative pt-6 sm:pt-12 pb-8 sm:pb-12 overflow-hidden">
-          {/* Subtle glowing ambient orbs */}
-          <div className="absolute top-0 left-1/4 -translate-x-1/2 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-1/3 right-10 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col items-start space-y-6 max-w-4xl">
-            {/* Badges strip */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300 text-xs font-bold tracking-wide">
-                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                {activeEdition.acronym}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-bold tracking-wide">
-                <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-                Microsoft CMT Managed
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Indexed Proceedings (IEEE / Scopus)
-              </span>
-            </div>
-
-            {/* Main Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
-              International Conference on Scientific Research, AI & Sustainable Innovation
-            </h1>
-
-            {/* Subtitle / Theme */}
-            <div className="space-y-2 text-slate-300">
-              <p className="text-base sm:text-xl font-medium text-slate-200">
-                Theme: <span className="text-blue-300 font-semibold">&ldquo;{activeEdition.theme}&rdquo;</span>
-              </p>
-              <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-3xl">
-                The premier annual academic conference hosted by HSTU Research Society. Gathering international scientists, engineers, researchers, and students. All manuscript peer review is managed strictly via Microsoft CMT.
-              </p>
-            </div>
-
-            {/* Event Key Details Strip */}
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-2 text-xs sm:text-sm text-slate-300">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-400 shrink-0" />
-                <span className="font-semibold">{activeEdition.dates}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-rose-400 shrink-0" />
-                <span>{activeEdition.venue}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>CMT Code: <strong className="font-mono text-emerald-300">{CMT_CONFIG.conferenceCode}</strong></span>
-              </div>
-            </div>
-
-            {/* Countdown to Submission */}
-            <div className="w-full pt-4 space-y-2">
-              <div className="flex items-center justify-between max-w-md text-xs font-semibold text-slate-300">
-                <span className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-emerald-400" />
-                  Submission Deadline Countdown (CMT):
-                </span>
-                <span className="text-blue-400 font-mono">July 25, 2026</span>
-              </div>
-              <SubmissionCountdown />
-            </div>
-
-            {/* Hero CTAs */}
-            <div className="flex flex-wrap items-center gap-3 pt-4">
-              <a
-                href={CMT_CONFIG.portalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-blue-600/30 transition-all transform hover:-translate-y-0.5"
+    <div className="flex flex-col gap-24 pb-12">
+      {/* Hero Section */}
+      <section className="relative min-h-[70vh] flex items-center pt-8">
+        <div className="container mx-auto px-6 max-w-7xl">
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
+            <div className="flex flex-col gap-5 max-w-2xl relative z-10">
+              <TypewriterHeading />
+              
+              <motion.p 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="text-lg md:text-xl text-primary-light/70 dark:text-primary/70 max-w-lg leading-relaxed"
               >
-                <span>Submit Paper via Microsoft CMT</span>
-                <ExternalLink className="w-4 h-4" />
-              </a>
-
-              <a
-                href="#submission"
-                className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/80 font-semibold text-sm transition-colors"
+                Empowering the next generation of researchers, innovators, and leaders through active research, collaborative community, and extensive resources.
+              </motion.p>
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="flex flex-col sm:flex-row gap-4 pt-4"
               >
-                <FileText className="w-4 h-4 text-blue-400" />
-                <span>Author Guidelines & CMT Guide</span>
-              </a>
-
-              <a
-                href="#tracks"
-                className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-300 border border-slate-800 font-semibold text-sm transition-colors"
-              >
-                <span>Call for Papers & Tracks</span>
-                <ArrowRight className="w-4 h-4" />
-              </a>
+                <Link href="/content/gallery" className="btn-primary group">
+                  Explore Gallery
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link href="/contact" className="btn-secondary">
+                  Contact Us
+                </Link>
+              </motion.div>
             </div>
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, rotateX: 10, rotateY: -10 }}
+              animate={{ opacity: 1, scale: 1, rotateX: 0, rotateY: 0 }}
+              transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="relative h-[500px] lg:h-[700px] w-full"
+              style={{ perspective: 1000 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-info-light/20 to-transparent rounded-[40px] transform rotate-3" />
+              <div className="absolute inset-0 glass-card overflow-hidden">
+                <Image 
+                  src="/heroimg1.png"
+                  alt="HSTU Research Society activities"
+                  fill
+                  priority
+                  className="object-cover hover:scale-105 transition-transform duration-700"
+                  referrerPolicy="no-referrer"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
+            </motion.div>
           </div>
-        </section>
-
-        {/* ANNUAL SERIES SWITCHER */}
-        <EditionSwitcher
-          activeEdition={activeEdition}
-          onSelectEdition={(ed) => setActiveEdition(ed)}
-        />
-
-        {/* MICROSOFT CMT PORTAL HUB */}
-        <CmtPortalCard />
-
-        {/* PRE-FLIGHT COMPLIANCE CHECKLIST */}
-        <PreflightChecklist />
-
-        {/* IMPORTANT DATES TIMELINE */}
-        <DatesTimeline />
-
-        {/* CALL FOR PAPERS & RESEARCH TRACKS */}
-        <TracksSection />
-
-        {/* KEYNOTE SPEAKERS */}
-        <SpeakersSection />
-
-        {/* 3-DAY TECHNICAL PROGRAM SCHEDULE */}
-        <ScheduleSection />
-
-        {/* REGISTRATION TIERS */}
-        <RegistrationSection />
-
-        {/* ORGANIZING COMMITTEE & CMT REVIEW BOARD */}
-        <CommitteeSection />
-
-        {/* ANNUAL SERIES ARCHIVES & PAST PROCEEDINGS */}
-        <ArchiveSection
-          onSelectEdition={(ed) => {
-            setActiveEdition(ed);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
-
-        {/* VENUE, TRAVEL & HOSPITALITY */}
-        <VenueSection />
-
-        {/* BOTTOM QUICK FOOTER BANNER */}
-        <div className="p-8 rounded-3xl bg-gradient-to-r from-blue-900/30 via-slate-900 to-indigo-900/30 border border-blue-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-1 text-center md:text-left">
-            <h3 className="text-xl font-bold text-white">
-              Ready to submit your manuscript for peer review?
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-400">
-              Access the official Microsoft CMT portal for {activeEdition.acronym} and submit your IEEE-format PDF today.
-            </p>
-          </div>
-          <a
-            href={CMT_CONFIG.portalUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-600/30 transition-all shrink-0"
-          >
-            <span>Open Microsoft CMT Portal</span>
-            <ExternalLink className="w-4 h-4" />
-          </a>
         </div>
+      </section>
 
-      </div>
+      {/* Stats Strip */}
+      <section className="container mx-auto px-6 max-w-7xl">
+        <div className="glass rounded-[36px] p-8 md:p-12 border-white/40 shadow-xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-black/5 dark:divide-white/10">
+            {[
+              { label: 'Active Researchers', endValue: 250, suffix: '+' , icon: Users },
+              { label: 'Years Established', endValue: 11, suffix: '', icon: Calendar },
+              { label: 'Alumni Network', endValue: 600, suffix: '+', icon: Award },
+              { label: 'Publications & Resources', endValue: 350, suffix: '+', icon: BookOpen },
+            ].map((stat, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ delay: i * 0.1, duration: 0.6 }}
+                className="flex flex-col items-center justify-center text-center gap-3 px-4"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-info-light/10 text-info-light flex items-center justify-center mb-2 group hover:scale-110 transition-transform">
+                  <stat.icon className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+                </div>
+                <div className="text-4xl md:text-5xl font-bold font-numbers tracking-tight">
+                  <AnimatedCounter endValue={stat.endValue} suffix={stat.suffix} />
+                </div>
+                <div className="text-sm font-medium text-secondary-light uppercase tracking-wider">
+                  {stat.label}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* About Overview */}
+      <section className="container mx-auto px-6 max-w-7xl">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="relative h-[400px] lg:h-[600px] w-full rounded-[36px] overflow-hidden group shadow-2xl"
+          >
+            <Image
+              src="/card.png"
+              alt="About HSTU Research Society"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <div className="absolute bottom-0 left-0 p-8">
+              <div className="glass px-6 py-4 rounded-2xl border-white/20 backdrop-blur-md hover:bg-white/70 transition-colors">
+                <p className="text-primary-light dark:text-primary font-medium">&quot;Pioneering Research &amp; Innovation&quot;</p>
+              </div>
+            </div>
+          </motion.div>
+          
+          <div className="flex flex-col gap-6">
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-4xl md:text-5xl font-bold"
+            >
+              More Than Just A <span className="text-info-light">Club</span>
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-lg text-primary-light/70 dark:text-primary/70 leading-relaxed"
+            >
+              We believe in fostering an environment where ideas flourish and potential is realized. Our platform serves as a bridge between academic learning and real-world application, offering members unique opportunities to lead, innovate, and grow.
+            </motion.p>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-lg text-primary-light/70 dark:text-primary/70 leading-relaxed"
+            >
+              Through hands-on projects, mentorship programs, and extensive networking events, we empower individuals to shape their futures and make lasting impacts in their respective fields.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="mt-4"
+            >
+              <Link href="/about/history" className="btn-secondary w-fit group">
+                Read Our History
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Split Section: Blog & Upcoming Events */}
+      <section className="container mx-auto px-6 max-w-7xl">
+        <div className="grid lg:grid-cols-12 gap-12">
+          {/* Blog Strip (Left 8 cols) */}
+          <div className="lg:col-span-8 flex flex-col gap-8">
+            <div className="flex items-end justify-between">
+              <h2 className="text-3xl md:text-4xl font-bold">Latest Stories</h2>
+              <Link href="/content/blog" className="text-info-light font-medium hover:underline flex items-center gap-1 group">
+                View All <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+            
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6" style={{ perspective: 1000 }}>
+              {blogs.map((item, idx) => (
+                <motion.div 
+                  key={item.id || idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="glass-card group flex flex-col h-full overflow-hidden hover:border-info-light/50 transition-colors"
+                >
+                  <Link href={`/content/blog/${item.slug || item.id}`} className="flex flex-col h-full">
+                    <div className="relative h-48 w-full overflow-hidden">
+                      <Image 
+                        src={item.coverImageUrl || item.imageUrl || `https://picsum.photos/seed/blog${idx}/600/400`}
+                        alt={item.title || "Blog cover"}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                    </div>
+                    <div className="p-6 flex flex-col flex-grow">
+                      <div className="text-xs font-bold text-info-light mb-2">
+                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase() : "RECENT POST"}
+                      </div>
+                      <h3 className="font-bold text-lg mb-3 line-clamp-2 group-hover:text-info-light transition-colors">
+                        {item.title}
+                      </h3>
+                      <p className="text-primary-light/70 dark:text-primary/70 text-sm line-clamp-3 mb-4 flex-grow">
+                        {item.excerpt || (item.contentMarkdown ? item.contentMarkdown.replace(/<[^>]+>/g, '').substring(0, 150) : "Explore the latest article...")}
+                      </p>
+
+                      {/* Author Info */}
+                      <div className="flex items-center gap-2.5 pt-3 border-t border-black/5 dark:border-white/10 mb-3">
+                        {item.authorImageUrl ? (
+                          <Image 
+                            src={item.authorImageUrl} 
+                            alt={item.authorName || item.author || 'Author'} 
+                            width={28}
+                            height={28}
+                            className="w-7 h-7 rounded-full object-cover border border-white/20"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 flex items-center justify-center font-bold text-[10px] shrink-0">
+                            {(item.authorName || item.author || "CE").slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                            {item.authorName || item.author || "HSTU Research Society"}
+                          </p>
+                          {item.authorRole && (
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{item.authorRole}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <span className="inline-flex items-center text-xs font-bold text-info-light group-hover:underline mt-auto">
+                        Read Story <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-1" />
+                      </span>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+              {blogs.length === 0 && (
+                <div className="col-span-full py-8 text-center text-primary-light/50 dark:text-primary/50">
+                  No blogs available yet.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Upcoming Events (Right 4 cols) */}
+          <div className="lg:col-span-4 flex flex-col gap-8">
+            <div className="flex items-end justify-between">
+              <h2 className="text-3xl md:text-4xl font-bold">Upcoming</h2>
+              <Link href="/events/upcoming" className="text-info-light font-medium hover:underline flex items-center gap-1 group">
+                More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+
+            <div className="glass rounded-[32px] p-2 flex flex-col gap-2">
+              {upcomingEvents.length === 0 && (
+                <div className="p-8 text-center text-primary-light/50 dark:text-primary/50">
+                  No upcoming events scheduled.
+                </div>
+              )}
+              {upcomingEvents.map((item, idx) => {
+                const eventDate = item.eventDate ? new Date(item.eventDate) : new Date();
+                const month = eventDate.toLocaleString('default', { month: 'short' });
+                const day = eventDate.getDate().toString();
+                // Simple start/end format for google calendar (very rudimentary)
+                const startStr = item.eventDate ? item.eventDate.replace(/-/g, '') + 'T' + (item.time ? item.time.replace(':', '') + '00Z' : '090000Z') : '20261114T090000Z';
+                const endStr = item.eventDate ? item.eventDate.replace(/-/g, '') + 'T' + '235900Z' : '20261114T170000Z';
+
+                return (
+                <motion.div 
+                  key={idx}
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="flex gap-4 p-4 rounded-[24px] hover:bg-black/5 dark:hover:bg-white/5 transition-colors group relative"
+                >
+                  <div className="w-16 h-16 shrink-0 rounded-2xl glass flex flex-col items-center justify-center border-info-light/20 text-info-light">
+                    <span className="text-xs font-bold uppercase">{month}</span>
+                    <span className="text-xl font-numbers font-bold leading-none">{day}</span>
+                  </div>
+                  <div className="flex flex-col justify-center flex-grow">
+                    <h4 className="font-bold text-base group-hover:text-info-light transition-colors line-clamp-1">{item.title}</h4>
+                    <p className="text-sm text-primary-light/60 dark:text-primary/60 flex items-center gap-1 mt-1">
+                      <MapPin className="w-3 h-3" /> {(item.location || "TBA")}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.title)}&dates=${startStr}/${endStr}&details=Join+us+for+${encodeURIComponent(item.title)}&location=${encodeURIComponent((item.location || "TBA"))}`;
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    }}
+                    title="Add to Google Calendar"
+                    className="shrink-0 flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full glass border-info-light/20 text-info-light hover:bg-info-light hover:text-white transition-all z-[20] cursor-pointer"
+                  >
+                    <CalendarPlus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Add to Calendar</span>
+                  </button>
+                </motion.div>
+              ); })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Partners & Collaborators Section */}
+      <PartnersSection />
     </div>
   );
 }
