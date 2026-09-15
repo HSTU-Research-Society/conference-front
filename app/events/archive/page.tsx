@@ -28,14 +28,14 @@ export default function ArchivePage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 max-w-7xl pb-24">
       <PageHeader 
-        title="Past Events & Archives" 
-        description="Explore the archives of our previous symposia, workshops, research fests, and competitions." 
+        title="Conference Proceeding (PDF Link)" 
+        description="Access and download published conference proceedings, papers, and archived documentation." 
       />
       
       {loading && (
         <div className="text-center py-20 text-primary-light/60 dark:text-primary/60 font-medium">
           <div className="inline-block animate-spin w-8 h-8 border-4 border-info-light border-t-transparent rounded-full mb-3" />
-          <p>Loading past events from archive...</p>
+          <p>Loading conference proceedings...</p>
         </div>
       )}
 
@@ -44,9 +44,9 @@ export default function ArchivePage() {
           <div className="w-12 h-12 rounded-2xl bg-info-light/10 text-info-light flex items-center justify-center mx-auto mb-3">
             <Archive className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-bold mb-2">No Past Events in Archive</h3>
+          <h3 className="text-xl font-bold mb-2">No Conference Proceedings in Archive</h3>
           <p className="text-sm text-primary-light/60 dark:text-primary/60">
-            Completed events and program memories will appear here.
+            Published conference proceedings and PDF links will appear here.
           </p>
         </div>
       )}

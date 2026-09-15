@@ -26,18 +26,18 @@ export default function NoticePage() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 max-w-4xl pb-24">
-      <PageHeader title="Notices & Announcements" noTopSpace />
+      <PageHeader title="Announcements" noTopSpace />
       
       <div className="flex flex-col gap-4">
         {loading && (
           <div className="text-center py-10 text-primary-light/60 dark:text-primary/60 font-medium">
             <div className="inline-block animate-spin w-8 h-8 border-4 border-info-light border-t-transparent rounded-full mb-3" />
-            <p>Loading notices...</p>
+            <p>Loading announcements...</p>
           </div>
         )}
         {!loading && notices.length === 0 && (
           <div className="text-center py-12 glass-card rounded-2xl p-6">
-            <p className="text-primary-light/60 dark:text-primary/60">No notices found.</p>
+            <p className="text-primary-light/60 dark:text-primary/60">No announcements found.</p>
           </div>
         )}
         {notices.map((notice, idx) => {

@@ -36,10 +36,10 @@ export default function ResourcesPage() {
 
   return (
     <div className="container mx-auto px-6 max-w-7xl pb-24">
-      <PageHeader title="Resources" noTopSpace />
+      <PageHeader title="Templates and Instructions" noTopSpace />
       
-      {loading && <div className="text-center py-10">Loading resources...</div>}
-      {!loading && resources.length === 0 && <div className="text-center py-10">No resources found.</div>}
+      {loading && <div className="text-center py-10">Loading templates and instructions...</div>}
+      {!loading && resources.length === 0 && <div className="text-center py-10">No templates and instructions found.</div>}
 
       {!loading && resources.length > 0 && (
       <div className="flex overflow-x-auto pb-4 mb-8 gap-2 no-scrollbar">

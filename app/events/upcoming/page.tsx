@@ -28,14 +28,14 @@ export default function UpcomingPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 max-w-7xl pb-24">
       <PageHeader 
-        title="Upcoming Events" 
-        description="Register and save your spot for upcoming seminars, workshops, contests, and gatherings." 
+        title="Roadmap" 
+        description="Key dates, milestones, upcoming seminars, workshops, and conference schedules." 
       />
       
       {loading && (
         <div className="text-center py-20 text-primary-light/60 dark:text-primary/60 font-medium">
           <div className="inline-block animate-spin w-8 h-8 border-4 border-info-light border-t-transparent rounded-full mb-3" />
-          <p>Loading upcoming events...</p>
+          <p>Loading roadmap...</p>
         </div>
       )}
 
@@ -44,9 +44,9 @@ export default function UpcomingPage() {
           <div className="w-12 h-12 rounded-2xl bg-info-light/10 text-info-light flex items-center justify-center mx-auto mb-3">
             <Calendar className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-bold mb-2">No Upcoming Events Scheduled</h3>
+          <h3 className="text-xl font-bold mb-2">No Roadmap Events Scheduled</h3>
           <p className="text-sm text-primary-light/60 dark:text-primary/60">
-            New workshops, seminars, and club events will be announced here soon.
+            Conference timeline, sessions, and milestones will be announced here soon.
           </p>
         </div>
       )}

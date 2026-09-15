@@ -11,7 +11,7 @@ const defaultQuickLinks = [
   { label: 'Home', href: '/' },
   { label: 'About Us', href: '/about/leadership/executive' },
   { label: 'Gallery', href: '/content/gallery' },
-  { label: 'Events', href: '/events/upcoming' },
+  { label: 'Roadmap', href: '/events/upcoming' },
   { label: 'Contact', href: '/contact' },
 ];
 
@@ -140,7 +140,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <h4 className="font-bold text-lg mb-2">Resources</h4>
+            <h4 className="font-bold text-lg mb-2">Templates & Instructions</h4>
             {resourceLinks.map((item) => (
               <Link key={item.label} href={item.href} className="text-primary-light/70 dark:text-primary/70 hover:text-info-light transition-colors flex items-center gap-2 group">
                 <span className="w-0 h-[2px] bg-info-light transition-all duration-300 group-hover:w-4"></span>

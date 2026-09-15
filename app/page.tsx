@@ -41,7 +41,7 @@ function AnimatedCounter({ endValue, duration = 2000, suffix = "" }: { endValue:
 
 function TypewriterHeading() {
   const [text, setText] = React.useState('');
-  const fullText = "ANALYZE\nSTRATEGIZE\nIMPROVISE";
+  const fullText = "International Conference on\nTrends in Science,\nEngineering and Technology";
 
   React.useEffect(() => {
     let i = 0;
@@ -78,7 +78,7 @@ function TypewriterHeading() {
   };
 
   return (
-    <div className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-[76px] font-extrabold tracking-tight pt-2 pb-2 relative w-full text-left">
+    <div className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] font-extrabold tracking-tight pt-2 pb-2 relative w-full text-left">
       <div className="opacity-0 pointer-events-none select-none text-left" aria-hidden="true">
         {renderLines(fullText)}
       </div>
@@ -117,7 +117,7 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 className="text-lg md:text-xl text-primary-light/70 dark:text-primary/70 max-w-lg leading-relaxed"
               >
-                Empowering the next generation of researchers, innovators, and leaders through active research, collaborative community, and extensive resources.
+                1st Edition
               </motion.p>
               
               <motion.div 
@@ -341,7 +341,7 @@ export default function Home() {
               ))}
               {blogs.length === 0 && (
                 <div className="col-span-full py-8 text-center text-primary-light/50 dark:text-primary/50">
-                  No blogs available yet.
+                  No conference proceedings available yet.
                 </div>
               )}
             </div>
@@ -350,7 +350,7 @@ export default function Home() {
           {/* Upcoming Events (Right 4 cols) */}
           <div className="lg:col-span-4 flex flex-col gap-8">
             <div className="flex items-end justify-between">
-              <h2 className="text-3xl md:text-4xl font-bold">Upcoming</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">Roadmap</h2>
               <Link href="/events/upcoming" className="text-info-light font-medium hover:underline flex items-center gap-1 group">
                 More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
@@ -359,7 +359,7 @@ export default function Home() {
             <div className="glass rounded-[32px] p-2 flex flex-col gap-2">
               {upcomingEvents.length === 0 && (
                 <div className="p-8 text-center text-primary-light/50 dark:text-primary/50">
-                  No upcoming events scheduled.
+                  No roadmap events scheduled.
                 </div>
               )}
               {upcomingEvents.map((item, idx) => {

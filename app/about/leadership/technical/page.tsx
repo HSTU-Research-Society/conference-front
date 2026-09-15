@@ -117,8 +117,8 @@ export default function AlumniPage() {
   return (
     <div className="container mx-auto px-6 max-w-7xl pb-24">
       <PageHeader
-        title="Our Alumni"
-        description="Celebrating the legacy and achievements of our past members."
+        title="Our Technical Committee"
+        description="The specialists of our conference"
       />
 
       {/* Category Navigation Tabs + Filter Icon */}

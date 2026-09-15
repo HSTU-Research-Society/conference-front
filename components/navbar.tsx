@@ -19,30 +19,30 @@ const navLinks = [
         label: 'Leadership',
         subChildren: [
           { href: '/about/leadership/executive', label: 'Executive' },
-          { href: '/about/leadership/alumni', label: 'Alumni' },
+          { href: '/about/leadership/technical', label: 'Technical' },
           { href: '/about/leadership/advisory', label: 'Advisory' },
           { href: '/about/leadership/taskforce', label: 'Taskforce' },
         ]
       },
-      { href: '/about/constitution', label: 'Constitution' },
-      { href: '/about/history', label: 'History' },
+      { href: '/about/scope', label: 'Scope' },
+      { href: '/about/cfp', label: 'Call For Papers' },
     ],
   },
   {
     label: 'Content',
     children: [
       { href: '/content/gallery', label: 'Gallery' },
-      { href: '/content/blog', label: 'Blog' },
+      { href: '/content/blog', label: 'Conference proceedings' },
       { href: '/content/magazine', label: 'Magazine' },
-      { href: '/content/resources', label: 'Resources' },
+      { href: '/content/resources', label: 'Templates and Instructions' },
     ],
   },
   {
     label: 'Event',
     children: [
-      { href: '/events/archive', label: 'Archive' },
-      { href: '/events/upcoming', label: 'Upcoming' },
-      { href: '/events/notice', label: 'Notice' },
+      { href: '/events/archive', label: 'Conference proceeding (pdf link)' },
+      { href: '/events/upcoming', label: 'Roadmap' },
+      { href: '/events/notice', label: 'Announcements' },
     ],
   },
   {
@@ -102,11 +102,11 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-3 group">
           <motion.div 
             whileHover={{ rotate: 5, scale: 1.05 }}
-            className="w-12 h-12 flex items-center justify-center relative rounded-xl overflow-hidden"
+            className="w-12 h-12 flex items-center justify-center relative rounded-xl overflow-hidden shrink-0"
           >
             <Image 
               src="/logo.png" 
-              alt="HSTU Research Society Logo" 
+              alt="ICTSET 2026 Logo" 
               width={48}
               height={48}
               priority
@@ -114,7 +114,10 @@ export function Navbar() {
               referrerPolicy="no-referrer"
             />
           </motion.div>
-          <span className="font-bold text-xl tracking-tight hidden sm:block">HSTU Research Society</span>
+          <div className="flex flex-col leading-tight">
+            <span className="font-bold text-xl tracking-tight">ICTSET</span>
+            <span className="text-xs font-semibold tracking-wider text-primary-light/60 dark:text-primary/60">2027</span>
+          </div>
         </Link>
 
         {/* Desktop Nav */}
