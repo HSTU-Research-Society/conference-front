@@ -32,9 +32,9 @@ const navLinks = [
     label: 'Content',
     children: [
       { href: '/content/gallery', label: 'Gallery' },
-      { href: '/content/blog', label: 'Conference proceedings' },
-      { href: '/content/magazine', label: 'Magazine' },
-      { href: '/content/resources', label: 'Templates and Instructions' },
+      { href: '/content/proceedings', label: 'Conference proceedings' },
+      { href: '/content/book', label: 'Book' },
+      { href: '/content/templates', label: 'Templates and Instructions' },
     ],
   },
   {
