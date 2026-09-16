@@ -11,7 +11,7 @@ const defaultQuickLinks = [
   { label: 'Home', href: '/' },
   { label: 'About Us', href: '/about/leadership/executive' },
   { label: 'Gallery', href: '/content/gallery' },
-  { label: 'Roadmap', href: '/events/upcoming' },
+  { label: 'Roadmap & Deadlines', href: '/events/deadlines' },
   { label: 'Contact', href: '/contact' },
 ];
 

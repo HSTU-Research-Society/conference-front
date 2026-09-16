@@ -351,7 +351,7 @@ export default function Home() {
           <div className="lg:col-span-4 flex flex-col gap-8">
             <div className="flex items-end justify-between">
               <h2 className="text-3xl md:text-4xl font-bold">Roadmap</h2>
-              <Link href="/events/upcoming" className="text-info-light font-medium hover:underline flex items-center gap-1 group">
+              <Link href="/events/deadlines" className="text-info-light font-medium hover:underline flex items-center gap-1 group">
                 More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>

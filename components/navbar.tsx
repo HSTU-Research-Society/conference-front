@@ -40,8 +40,8 @@ const navLinks = [
   {
     label: 'Event',
     children: [
-      { href: '/events/archive', label: 'Conference proceeding (pdf link)' },
-      { href: '/events/upcoming', label: 'Roadmap' },
+      { href: '/events/timeline', label: 'Conference Timeline' },
+      { href: '/events/deadlines', label: 'Roadmap & Deadlines' },
       { href: '/events/notice', label: 'Announcements' },
     ],
   },
