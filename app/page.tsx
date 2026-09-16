@@ -306,30 +306,40 @@ export default function Home() {
                         {item.excerpt || (item.contentMarkdown ? item.contentMarkdown.replace(/<[^>]+>/g, '').substring(0, 150) : "Explore the latest article...")}
                       </p>
 
-                      {/* Author Info */}
-                      <div className="flex items-center gap-2.5 pt-3 border-t border-black/5 dark:border-white/10 mb-3">
-                        {item.authorImageUrl ? (
-                          <Image 
-                            src={item.authorImageUrl} 
-                            alt={item.authorName || item.author || 'Author'} 
-                            width={28}
-                            height={28}
-                            className="w-7 h-7 rounded-full object-cover border border-white/20"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 flex items-center justify-center font-bold text-[10px] shrink-0">
-                            {(item.authorName || item.author || "CE").slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                            {item.authorName || item.author || "HSTU Research Society"}
-                          </p>
-                          {item.authorRole && (
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{item.authorRole}</p>
+                      {/* Author Info & Full Paper indicator */}
+                      <div className="flex items-center justify-between gap-2 pt-3 border-t border-black/5 dark:border-white/10 mb-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {item.authorImageUrl ? (
+                            <Image 
+                              src={item.authorImageUrl} 
+                              alt={item.authorName || item.author || 'Author'} 
+                              width={28}
+                              height={28}
+                              className="w-7 h-7 rounded-full object-cover border border-white/20 shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 flex items-center justify-center font-bold text-[10px] shrink-0">
+                              {(item.authorName || item.author || "CE").slice(0, 2).toUpperCase()}
+                            </div>
                           )}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                              {item.authorName || item.author || "HSTU Research Society"}
+                            </p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                              {item.authors && item.authors.length > 1
+                                ? `+${item.authors.length - 1} co-author${item.authors.length > 2 ? 's' : ''}`
+                                : (item.authorRole || item.affiliation || "Author")}
+                            </p>
+                          </div>
                         </div>
+
+                        {item.articleUrl && (
+                          <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                            Paper
+                          </span>
+                        )}
                       </div>
 
                       <span className="inline-flex items-center text-xs font-bold text-info-light group-hover:underline mt-auto">

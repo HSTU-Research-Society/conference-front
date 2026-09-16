@@ -1,6 +1,16 @@
 import { collection, doc, getDoc, getDocs, query, orderBy, limit, where, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
+export interface AuthorItem {
+  id?: string;
+  name: string;
+  email?: string;
+  orcid?: string;
+  role?: string;
+  affiliation?: string;
+  imageUrl?: string;
+}
+
 export interface BlogPost {
   id: string;
   slug?: string;
@@ -14,18 +24,28 @@ export interface BlogPost {
   excerpt?: string;
   summary?: string;
   readTimeMinutes?: number;
+  readTime?: string;
   tags?: string[];
   category?: string;
+  authors: AuthorItem[];
+  // Legacy single-author fields maintained for backwards-compatibility
   author?: string;
   authorName?: string;
+  authorEmail?: string;
+  authorOrcid?: string;
   authorImageUrl?: string;
   authorAvatar?: string;
   authorRole?: string;
+  affiliation?: string;
+  articleUrl?: string; // Link to full paper / article
+  paperUrl?: string;
+  displayInFrontend?: boolean;
   createdAt?: any;
   publishedAt?: any;
   status?: string;
   featured?: boolean;
   order?: number;
+  position?: number;
   [key: string]: any;
 }
 
@@ -225,12 +245,63 @@ export function normalizeBlog(docId: string, raw: any): BlogPost {
   }
 
   // Calculate read time if not provided
-  const wordCount = contentText ? contentText.split(/\s+/).length : 0;
-  const estimatedReadTime = data.readTimeMinutes || data.readTime || data.readingTime || Math.max(1, Math.ceil(wordCount / 200));
+  let readTimeText = '';
+  let estimatedReadTime = 5;
+  if (typeof data.readTime === 'string' && data.readTime.trim()) {
+    readTimeText = data.readTime.trim();
+    const match = readTimeText.match(/\d+/);
+    estimatedReadTime = match ? parseInt(match[0], 10) : 5;
+  } else if (typeof data.readTimeMinutes === 'number') {
+    estimatedReadTime = data.readTimeMinutes;
+    readTimeText = `${estimatedReadTime} min read`;
+  } else {
+    const wordCount = contentText ? contentText.split(/\s+/).length : 0;
+    estimatedReadTime = Math.max(1, Math.ceil(wordCount / 200));
+    readTimeText = `${estimatedReadTime} min read`;
+  }
 
-  const authorName = data.authorName || data.author || data.writer || data.createdBy || 'CE Club HSTU';
-  const authorAvatar = data.authorImageUrl || data.authorAvatar || data.authorImage || data.avatar || data.authorPhoto || '';
-  const authorRole = data.authorRole || data.role || data.designation || data.authorDesignation || '';
+  // Parse authors array or convert legacy single-author fields
+  let authorsList: AuthorItem[] = [];
+  if (Array.isArray(data.authors) && data.authors.length > 0) {
+    authorsList = data.authors
+      .filter((a: any) => a && (a.name || a.authorName))
+      .map((a: any) => ({
+        id: a.id || undefined,
+        name: (a.name || a.authorName || '').trim(),
+        email: (a.email || a.authorEmail || '').trim(),
+        orcid: (a.orcid || a.authorOrcid || '').trim(),
+        role: (a.role || a.authorRole || 'Co-Author').trim(),
+        affiliation: (a.affiliation || a.department || '').trim(),
+        imageUrl: (a.imageUrl || a.avatar || a.photo || '').trim(),
+      }));
+  }
+
+  // Fallback to legacy single author fields if authors list is empty
+  if (authorsList.length === 0) {
+    const fallbackName = data.authorName || data.author || data.writer || data.createdBy || 'HSTU Research Society';
+    authorsList = [
+      {
+        name: fallbackName,
+        email: data.authorEmail || data.email || '',
+        orcid: data.authorOrcid || data.orcid || '',
+        role: data.authorRole || data.role || data.designation || 'Lead Author',
+        affiliation: data.affiliation || data.department || 'HSTU Research Society',
+        imageUrl: data.authorImageUrl || data.authorAvatar || data.authorImage || data.avatar || data.authorPhoto || '',
+      }
+    ];
+  }
+
+  const primaryAuthor = authorsList[0];
+  const authorName = primaryAuthor.name;
+  const authorAvatar = primaryAuthor.imageUrl || data.authorImageUrl || data.authorAvatar || '';
+  const authorRole = primaryAuthor.role || data.authorRole || '';
+  const authorEmail = primaryAuthor.email || data.authorEmail || '';
+  const authorOrcid = primaryAuthor.orcid || data.authorOrcid || '';
+  const affiliation = primaryAuthor.affiliation || data.affiliation || '';
+  const articleUrl = data.articleUrl || data.link || data.paperUrl || data.fullPaperUrl || data.url || '';
+
+  const orderNum = typeof data.order === 'number' ? data.order : (typeof data.position === 'number' ? data.position : 9999);
+  const positionNum = typeof data.position === 'number' ? data.position : orderNum;
 
   return {
     id: docId,
@@ -245,31 +316,41 @@ export function normalizeBlog(docId: string, raw: any): BlogPost {
     description: contentText,
     excerpt: plainExcerpt,
     summary: plainExcerpt,
+    readTime: readTimeText,
     readTimeMinutes: estimatedReadTime,
     tags: tagList,
     category: data.category || (tagList[0] || 'General'),
+    authors: authorsList,
     author: authorName,
     authorName: authorName,
+    authorEmail: authorEmail,
+    authorOrcid: authorOrcid,
     authorImageUrl: authorAvatar,
     authorAvatar: authorAvatar,
     authorRole: authorRole,
+    affiliation: affiliation,
+    articleUrl: articleUrl,
+    paperUrl: articleUrl,
+    displayInFrontend: data.displayInFrontend !== undefined ? data.displayInFrontend : true,
     createdAt: dateVal,
     publishedAt: dateVal,
     status: data.status || 'published',
     featured: Boolean(data.featured),
-    order: typeof data.order === 'number' ? data.order : 0,
+    order: orderNum,
+    position: positionNum,
   };
 }
 
 export const BLOG_COLLECTIONS = ['blog', 'blogs', 'posts', 'articles', 'content_blog', 'blog_posts', 'site_blogs'];
 
 export async function getAllBlogs(): Promise<BlogPost[]> {
-  if (!db) return [];
+  const firestore = db;
+  if (!firestore) return [];
   const allPostsMap = new Map<string, BlogPost>();
 
   for (const colName of BLOG_COLLECTIONS) {
     try {
-      const snap = await getDocs(collection(db, colName));
+      const snap = await getDocs(collection(firestore, colName));
 
       if (snap && !snap.empty) {
         snap.docs.forEach((d) => {
@@ -277,8 +358,15 @@ export async function getAllBlogs(): Promise<BlogPost[]> {
           const normalized = normalizeBlog(d.id, raw);
           
           // Show published posts or posts without explicit draft/archived status
-          const isDraft = normalized.status === 'draft' || normalized.status === 'archived' || raw.isPublished === false;
-          if (!isDraft) {
+          const isHidden = 
+            raw.displayInFrontend === false || 
+            raw.displayInFrontend === 'false' ||
+            normalized.displayInFrontend === false ||
+            normalized.status === 'draft' || 
+            normalized.status === 'archived' || 
+            raw.isPublished === false;
+
+          if (!isHidden) {
             allPostsMap.set(d.id, normalized);
           }
         });
@@ -289,12 +377,14 @@ export async function getAllBlogs(): Promise<BlogPost[]> {
   }
 
   const posts = Array.from(allPostsMap.values());
-  // Sort descending by date, with order as tie-breaker
+  // Sort by order/position ascending (matching backend), then by date descending
   posts.sort((a, b) => {
+    const orderA = a.position !== undefined ? a.position : (a.order !== undefined ? a.order : 9999);
+    const orderB = b.position !== undefined ? b.position : (b.order !== undefined ? b.order : 9999);
+    if (orderA !== orderB) return orderA - orderB;
     const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.publishedAt ? new Date(a.publishedAt).getTime() : 0);
     const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.publishedAt ? new Date(b.publishedAt).getTime() : 0);
-    if (timeB !== timeA) return timeB - timeA;
-    return (a.order || 0) - (b.order || 0);
+    return timeB - timeA;
   });
 
   return posts;
@@ -306,14 +396,15 @@ export async function getLatestBlogs(count = 3): Promise<BlogPost[]> {
 }
 
 export async function getBlogById(idOrSlug: string): Promise<BlogPost | null> {
-  if (!db || !idOrSlug) return null;
+  const firestore = db;
+  if (!firestore || !idOrSlug) return null;
   const cleanKey = decodeURIComponent(idOrSlug).trim();
 
   for (const colName of BLOG_COLLECTIONS) {
     try {
       // 1. Direct document lookup by doc ID
       try {
-        const docRef = doc(db, colName, cleanKey);
+        const docRef = doc(firestore, colName, cleanKey);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           return normalizeBlog(docSnap.id, docSnap.data());
@@ -323,7 +414,7 @@ export async function getBlogById(idOrSlug: string): Promise<BlogPost | null> {
       }
 
       // 2. Query by slug
-      const bySlugQuery = query(collection(db, colName), where('slug', '==', cleanKey));
+      const bySlugQuery = query(collection(firestore, colName), where('slug', '==', cleanKey));
       const slugSnap = await getDocs(bySlugQuery);
       if (!slugSnap.empty) {
         const d = slugSnap.docs[0];
@@ -331,7 +422,7 @@ export async function getBlogById(idOrSlug: string): Promise<BlogPost | null> {
       }
 
       // 3. Query by id field
-      const byIdQuery = query(collection(db, colName), where('id', '==', cleanKey));
+      const byIdQuery = query(collection(firestore, colName), where('id', '==', cleanKey));
       const idSnap = await getDocs(byIdQuery);
       if (!idSnap.empty) {
         const d = idSnap.docs[0];
