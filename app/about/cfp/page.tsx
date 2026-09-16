@@ -38,7 +38,7 @@ export default function HistoryPage() {
 
   return (
     <div className="container mx-auto px-6 max-w-4xl pb-24">
-      <PageHeader title="Our History" />
+      <PageHeader title="Call For Papers" />
       
       <div className="glass rounded-[36px] overflow-hidden mb-12">
         <div className="p-8 md:p-12 prose dark:prose-invert max-w-none">

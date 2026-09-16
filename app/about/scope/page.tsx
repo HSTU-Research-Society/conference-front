@@ -38,7 +38,7 @@ export default function ConstitutionPage() {
 
   return (
     <div className="container mx-auto px-6 max-w-4xl pb-24">
-      <PageHeader title="Our Constitution" />
+      <PageHeader title="Tracks and Scope" />
       
       <div className="glass rounded-[36px] p-8 md:p-12 prose dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-info-light">
         {loading ? (
