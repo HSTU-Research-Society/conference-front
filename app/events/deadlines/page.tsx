@@ -21,25 +21,8 @@ import {
   Database
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { collection, getDocs, onSnapshot, query } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { subscribeMilestones, MilestoneItem } from '@/lib/db';
 import { LatexRenderer } from '@/components/latex-renderer';
-
-export type MilestoneStatus = 'completed' | 'upcoming' | 'deadline' | 'highlight';
-
-export interface Milestone {
-  id: string;
-  title: string;
-  date: string;
-  time?: string;
-  isoDate: string; // for calendar export (YYYYMMDDTHHMMSSZ or YYYYMMDD)
-  description: string;
-  status: MilestoneStatus;
-  icon: string;
-  order: number;
-  createdAt?: number;
-  updatedAt?: number;
-}
 
 // Visual icons available from the conference backend
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -67,7 +50,7 @@ function renderMilestoneIcon(iconName?: string, className: string = 'w-5 h-5') {
 }
 
 // 9 Standard Default Milestones for ICTSET 2027 (matching backend schema)
-const DEFAULT_ICTSET_MILESTONES: Milestone[] = [
+const DEFAULT_ICTSET_MILESTONES: MilestoneItem[] = [
   {
     id: 'announcement',
     title: 'Event Announcement Date',
@@ -170,104 +153,23 @@ const DEFAULT_ICTSET_MILESTONES: Milestone[] = [
 ];
 
 export default function DeadlinesPage() {
-  const [milestones, setMilestones] = useState<Milestone[]>(DEFAULT_ICTSET_MILESTONES);
+  const [milestones, setMilestones] = useState<MilestoneItem[]>(DEFAULT_ICTSET_MILESTONES);
   const [isLiveSynced, setIsLiveSynced] = useState(false);
 
   useEffect(() => {
-    if (!db) {
-      return;
-    }
-
-    let isMounted = true;
-    let unsubDeadlines: (() => void) | null = null;
-
-    const parseDocs = (docs: any[]): Milestone[] => {
-      const parsed = docs.map((d) => {
-        const data = d.data();
-        return {
-          id: data.id || d.id,
-          title: data.title || '',
-          date: data.date || '',
-          time: data.time || '',
-          isoDate: data.isoDate || '',
-          description: data.description || '',
-          status: (data.status as MilestoneStatus) || 'upcoming',
-          icon: data.icon || 'Calendar',
-          order: typeof data.order === 'number' ? data.order : 999,
-          createdAt: data.createdAt || 0,
-          updatedAt: data.updatedAt || 0,
-        } as Milestone;
-      });
-
-      parsed.sort((a, b) => {
-        if (a.order !== b.order) return a.order - b.order;
-        return (a.createdAt || 0) - (b.createdAt || 0);
-      });
-
-      return parsed;
-    };
-
-    // Primary subscription to "milestones" collection (matches backend)
-    const milestonesCol = collection(db, 'milestones');
-    const unsubMilestones = onSnapshot(
-      milestonesCol,
-      (snap) => {
-        if (!isMounted) return;
-        if (!snap.empty) {
-          setMilestones(parseDocs(snap.docs));
-          setIsLiveSynced(true);
-        } else {
-          // Secondary fallback to "deadlines" collection
-          const deadlinesCol = collection(db, 'deadlines');
-          unsubDeadlines = onSnapshot(
-            deadlinesCol,
-            (deadlinesSnap) => {
-              if (!isMounted) return;
-              if (!deadlinesSnap.empty) {
-                setMilestones(parseDocs(deadlinesSnap.docs));
-                setIsLiveSynced(true);
-              }
-            },
-            (err) => {
-              console.warn('Fallback deadlines listener error:', err);
-            }
-          );
-        }
-      },
-      (err) => {
-        console.warn('Milestones listener error, attempting one-time fetch:', err);
-        // Resilient fallback query
-        getDocs(query(collection(db, 'milestones')))
-          .then((snap) => {
-            if (!isMounted) return;
-            if (!snap.empty) {
-              setMilestones(parseDocs(snap.docs));
-              setIsLiveSynced(true);
-            } else {
-              return getDocs(query(collection(db, 'deadlines')));
-            }
-          })
-          .then((deadlinesSnap) => {
-            if (!isMounted || !deadlinesSnap) return;
-            if (!deadlinesSnap.empty) {
-              setMilestones(parseDocs(deadlinesSnap.docs));
-              setIsLiveSynced(true);
-            }
-          })
-          .catch((fetchErr) => {
-            console.warn('Database fetch fallback notice:', fetchErr);
-          });
+    const unsub = subscribeMilestones((updated) => {
+      if (updated && updated.length > 0) {
+        setMilestones(updated);
+        setIsLiveSynced(true);
       }
-    );
+    });
 
     return () => {
-      isMounted = false;
-      unsubMilestones();
-      if (unsubDeadlines) unsubDeadlines();
+      unsub();
     };
   }, []);
 
-  const handleAddToCalendar = (milestone: Milestone) => {
+  const handleAddToCalendar = (milestone: MilestoneItem) => {
     let startStr = (milestone.isoDate || '').trim().replace(/[^0-9TZ]/g, '');
     if (!startStr) {
       const d = new Date(milestone.date);

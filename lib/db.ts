@@ -1164,3 +1164,111 @@ export function subscribeFooterInfo(onUpdate: (info: FooterInfo) => void) {
     });
   };
 }
+
+export type MilestoneStatus = 'completed' | 'upcoming' | 'deadline' | 'highlight';
+
+export interface MilestoneItem {
+  id: string;
+  title: string;
+  date: string;
+  time?: string;
+  isoDate: string;
+  description: string;
+  status: MilestoneStatus;
+  icon: string;
+  order: number;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+function parseMilestoneDocs(docs: any[]): MilestoneItem[] {
+  const parsed = docs.map((d) => {
+    const data = typeof d.data === 'function' ? d.data() : d;
+    return {
+      id: data.id || d.id || '',
+      title: data.title || '',
+      date: data.date || '',
+      time: data.time || '',
+      isoDate: data.isoDate || '',
+      description: data.description || '',
+      status: (data.status as MilestoneStatus) || 'upcoming',
+      icon: data.icon || 'Calendar',
+      order: typeof data.order === 'number' ? data.order : 999,
+      createdAt: data.createdAt || 0,
+      updatedAt: data.updatedAt || 0,
+    } as MilestoneItem;
+  });
+
+  parsed.sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order;
+    return (a.createdAt || 0) - (b.createdAt || 0);
+  });
+
+  return parsed;
+}
+
+export async function getMilestones(): Promise<MilestoneItem[]> {
+  const firestore = db;
+  if (!firestore) return [];
+  try {
+    let snap = await getDocs(query(collection(firestore, 'milestones')));
+    if (snap.empty) {
+      snap = await getDocs(query(collection(firestore, 'deadlines')));
+    }
+    return parseMilestoneDocs(snap.docs);
+  } catch (err) {
+    console.warn('Error fetching milestones:', err);
+    return [];
+  }
+}
+
+export function subscribeMilestones(onUpdate: (milestones: MilestoneItem[]) => void): () => void {
+  const firestore = db;
+  if (!firestore) return () => {};
+
+  let unsubDeadlines: (() => void) | null = null;
+  let isPrimaryResolved = false;
+
+  try {
+    const milestonesCol = collection(firestore, 'milestones');
+    const unsubMilestones = onSnapshot(
+      milestonesCol,
+      (snap) => {
+        if (!snap.empty) {
+          isPrimaryResolved = true;
+          onUpdate(parseMilestoneDocs(snap.docs));
+        } else if (!isPrimaryResolved) {
+          try {
+            const deadlinesCol = collection(firestore, 'deadlines');
+            unsubDeadlines = onSnapshot(
+              deadlinesCol,
+              (deadlinesSnap) => {
+                if (!deadlinesSnap.empty) {
+                  onUpdate(parseMilestoneDocs(deadlinesSnap.docs));
+                }
+              },
+              (err) => console.warn('deadlines collection listener error:', err)
+            );
+          } catch (e) {
+            console.warn('deadlines subscribe error:', e);
+          }
+        }
+      },
+      (err) => {
+        console.warn('milestones collection listener error:', err);
+        getMilestones().then((list) => {
+          if (list.length > 0) onUpdate(list);
+        });
+      }
+    );
+
+    return () => {
+      unsubMilestones();
+      if (unsubDeadlines) unsubDeadlines();
+    };
+  } catch (err) {
+    console.warn('subscribeMilestones error:', err);
+    return () => {};
+  }
+}
+
