@@ -1,1 +1,1 @@
-export { default } from '../content/blog/page';
+export { default } from '../content/proceedings/page';

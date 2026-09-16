@@ -18,7 +18,7 @@ const defaultQuickLinks = [
 const defaultResourceLinks = [
   { label: 'Constitution', href: '/about/constitution' },
   { label: 'History', href: '/about/history' },
-  { label: 'Magazine', href: '/content/magazine' },
+  { label: 'Book', href: '/content/book' },
   { label: 'Certificate Verification', href: '/verification/certificate' },
   { label: 'FAQ', href: '/contact/faq' },
 ];

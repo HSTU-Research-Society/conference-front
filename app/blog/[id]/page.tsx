@@ -1,1 +1,1 @@
-export { default } from '../../content/blog/[id]/page';
+export { default } from '../../content/proceedings/[id]/page';
