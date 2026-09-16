@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'HSTU Research Society',
+    name: 'International Conference on Trends in Science, Engineering and Technology',
     short_name: 'HSTU RS',
-    description: 'Hajee Mohammad Danesh Science and Technology University Research Society',
+    description: 'Official Website of Internationa Conference on Trends in Science, Engineering and Technology (ICTSET) organized by Hajee Mohammad Danesh Science and Technology University Research Society',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

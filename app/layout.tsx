@@ -44,11 +44,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hsturs.org';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'HSTU Research Society | Analyze, Strategize, Improvise',
+    default: 'ICTSET',
     template: '%s | HSTU Research Society',
   },
   description:
-    'Official platform of Hajee Mohammad Danesh Science and Technology University Research Society (HSTURS). Empowering future researchers through scientific innovation, academic publications, workshops, and global collaboration.',
+    'Official Website of Internationa Conference on Trends in Science, Engineering and Technology (ICTSET) organized by Hajee Mohammad Danesh Science and Technology University Research Society',
   keywords: [
     'HSTU Research Society',
     'HSTURS',
@@ -60,8 +60,8 @@ export const metadata: Metadata = {
     'Undergraduate Research',
     'University Research Society',
     'Dinajpur Research',
-    'ELSEPA',
-    'STEM Research Bangladesh',
+    'ICTSET',
+    'Conference',
   ],
   authors: [{ name: 'HSTU Research Society', url: siteUrl }],
   creator: 'HSTU Research Society',
@@ -89,22 +89,22 @@ export const metadata: Metadata = {
     url: siteUrl,
     title: 'HSTU Research Society | Analyze, Strategize, Improvise',
     description:
-      'Official platform of Hajee Mohammad Danesh Science and Technology University Research Society. Empowering student researchers, publishing scientific journals, and organizing workshops.',
-    siteName: 'HSTU Research Society',
+    'Official Website of Internationa Conference on Trends in Science, Engineering and Technology (ICTSET) organized by Hajee Mohammad Danesh Science and Technology University Research Society',
+    siteName: 'ICTSET',
     images: [
       {
         url: '/logo.png',
         width: 512,
         height: 512,
-        alt: 'HSTU Research Society Official Logo',
+        alt: 'ICTSET Official Logo',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'HSTU Research Society',
+    title: 'ICTSET',
     description:
-      'Empowering the next generation of researchers at Hajee Mohammad Danesh Science and Technology University.',
+    'Official Website of Internationa Conference on Trends in Science, Engineering and Technology (ICTSET) organized by Hajee Mohammad Danesh Science and Technology University Research Society',
     site: '@hsturesearch',
     creator: '@hsturesearch',
     images: ['/logo.png'],

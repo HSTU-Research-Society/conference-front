@@ -1,43 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
-import { motion, useInView } from 'motion/react';
+import React from 'react';
+import { motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Calendar, Users, Award, BookOpen, MapPin, CalendarPlus } from 'lucide-react';
-import { getLatestBlogs, getUpcomingEvents } from '@/lib/db';
+import { ArrowRight } from 'lucide-react';
 import { PartnersSection } from '@/components/partners-section';
-
-function AnimatedCounter({ endValue, duration = 2000, suffix = "" }: { endValue: number, duration?: number, suffix?: string }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
-  useEffect(() => {
-    if (!isInView) return;
-
-    let startTimestamp: number | null = null;
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      
-      // easeOutExpo
-      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      
-      setCount(Math.floor(easeProgress * endValue));
-      
-      if (progress < 1) {
-        window.requestAnimationFrame(step);
-      }
-    };
-    
-    window.requestAnimationFrame(step);
-  }, [endValue, duration, isInView]);
-
-  // Format with commas if over 999
-  const formatted = count >= 1000 ? count.toLocaleString() : count.toString();
-  return <span ref={ref}>{formatted}{suffix}</span>;
-}
 
 function TypewriterHeading() {
   const [text, setText] = React.useState('');
@@ -90,18 +58,6 @@ function TypewriterHeading() {
 }
 
 export default function Home() {
-  const [blogs, setBlogs] = useState<any[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-
-  useEffect(() => {
-    async function loadData() {
-      const b = await getLatestBlogs(3);
-      const e = await getUpcomingEvents(3);
-      setBlogs(b);
-      setUpcomingEvents(e);
-    }
-    loadData();
-  }, []);
   return (
     <div className="flex flex-col gap-24 pb-12">
       {/* Hero Section */}
@@ -160,37 +116,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Strip */}
+      {/* Organized by HSTU Research Society */}
       <section className="container mx-auto px-6 max-w-7xl">
-        <div className="glass rounded-[36px] p-8 md:p-12 border-white/40 shadow-xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-black/5 dark:divide-white/10">
-            {[
-              { label: 'Active Researchers', endValue: 250, suffix: '+' , icon: Users },
-              { label: 'Years Established', endValue: 11, suffix: '', icon: Calendar },
-              { label: 'Alumni Network', endValue: 600, suffix: '+', icon: Award },
-              { label: 'Publications & Resources', endValue: 350, suffix: '+', icon: BookOpen },
-            ].map((stat, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ delay: i * 0.1, duration: 0.6 }}
-                className="flex flex-col items-center justify-center text-center gap-3 px-4"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-info-light/10 text-info-light flex items-center justify-center mb-2 group hover:scale-110 transition-transform">
-                  <stat.icon className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                </div>
-                <div className="text-4xl md:text-5xl font-bold font-numbers tracking-tight">
-                  <AnimatedCounter endValue={stat.endValue} suffix={stat.suffix} />
-                </div>
-                <div className="text-sm font-medium text-secondary-light uppercase tracking-wider">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6 }}
+          className="glass rounded-[36px] p-8 md:p-12 border-white/40 shadow-xl text-center flex flex-col items-center justify-center gap-3"
+        >
+          <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-primary-light dark:text-primary">
+            Organized by <span className="text-transparent bg-clip-text bg-gradient-to-r from-info-light via-blue-500 to-indigo-500">HSTU Research Society</span>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* About Overview */}
@@ -204,7 +142,7 @@ export default function Home() {
           >
             <Image
               src="/card.png"
-              alt="About HSTU Research Society"
+              alt="About ICTSET Conference"
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover group-hover:scale-105 transition-transform duration-700"
@@ -225,7 +163,7 @@ export default function Home() {
               viewport={{ once: true }}
               className="text-4xl md:text-5xl font-bold"
             >
-              More Than Just A <span className="text-info-light">Club</span>
+              About the <span className="text-info-light">Conference</span>
             </motion.h2>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
@@ -234,7 +172,7 @@ export default function Home() {
               transition={{ delay: 0.1 }}
               className="text-lg text-primary-light/70 dark:text-primary/70 leading-relaxed"
             >
-              We believe in fostering an environment where ideas flourish and potential is realized. Our platform serves as a bridge between academic learning and real-world application, offering members unique opportunities to lead, innovate, and grow.
+              The International Conference on Trends in Science, Engineering and Technology (ICTSET) is a premier academic gathering bringing together leading researchers, academicians, scientists, and industry innovators from around the world to present and exchange cutting-edge advancements.
             </motion.p>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
@@ -243,7 +181,7 @@ export default function Home() {
               transition={{ delay: 0.2 }}
               className="text-lg text-primary-light/70 dark:text-primary/70 leading-relaxed"
             >
-              Through hands-on projects, mentorship programs, and extensive networking events, we empower individuals to shape their futures and make lasting impacts in their respective fields.
+              Organized to foster interdisciplinary collaboration, ICTSET provides a dynamic international forum for sharing peer-reviewed scientific findings, emerging methodologies, and sustainable technological solutions addressing modern global challenges.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -252,169 +190,11 @@ export default function Home() {
               transition={{ delay: 0.3 }}
               className="mt-4"
             >
-              <Link href="/about/history" className="btn-secondary w-fit group">
-                Read Our History
+              <Link href="/about/scope" className="btn-secondary w-fit group">
+                Explore Conference Scope
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Split Section: Blog & Upcoming Events */}
-      <section className="container mx-auto px-6 max-w-7xl">
-        <div className="grid lg:grid-cols-12 gap-12">
-          {/* Blog Strip (Left 8 cols) */}
-          <div className="lg:col-span-8 flex flex-col gap-8">
-            <div className="flex items-end justify-between">
-              <h2 className="text-3xl md:text-4xl font-bold">Latest Stories</h2>
-              <Link href="/content/blog" className="text-info-light font-medium hover:underline flex items-center gap-1 group">
-                View All <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </div>
-            
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6" style={{ perspective: 1000 }}>
-              {blogs.map((item, idx) => (
-                <motion.div 
-                  key={item.id || idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="glass-card group flex flex-col h-full overflow-hidden hover:border-info-light/50 transition-colors"
-                >
-                  <Link href={`/content/blog/${item.slug || item.id}`} className="flex flex-col h-full">
-                    <div className="relative h-48 w-full overflow-hidden">
-                      <Image 
-                        src={item.coverImageUrl || item.imageUrl || `https://picsum.photos/seed/blog${idx}/600/400`}
-                        alt={item.title || "Blog cover"}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-                    </div>
-                    <div className="p-6 flex flex-col flex-grow">
-                      <div className="text-xs font-bold text-info-light mb-2">
-                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase() : "RECENT POST"}
-                      </div>
-                      <h3 className="font-bold text-lg mb-3 line-clamp-2 group-hover:text-info-light transition-colors">
-                        {item.title}
-                      </h3>
-                      <p className="text-primary-light/70 dark:text-primary/70 text-sm line-clamp-3 mb-4 flex-grow">
-                        {item.excerpt || (item.contentMarkdown ? item.contentMarkdown.replace(/<[^>]+>/g, '').substring(0, 150) : "Explore the latest article...")}
-                      </p>
-
-                      {/* Author Info & Full Paper indicator */}
-                      <div className="flex items-center justify-between gap-2 pt-3 border-t border-black/5 dark:border-white/10 mb-3">
-                        <div className="flex items-center gap-2 min-w-0">
-                          {item.authorImageUrl ? (
-                            <Image 
-                              src={item.authorImageUrl} 
-                              alt={item.authorName || item.author || 'Author'} 
-                              width={28}
-                              height={28}
-                              className="w-7 h-7 rounded-full object-cover border border-white/20 shrink-0"
-                              referrerPolicy="no-referrer"
-                            />
-                          ) : (
-                            <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 flex items-center justify-center font-bold text-[10px] shrink-0">
-                              {(item.authorName || item.author || "CE").slice(0, 2).toUpperCase()}
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                              {item.authorName || item.author || "HSTU Research Society"}
-                            </p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                              {item.authors && item.authors.length > 1
-                                ? `+${item.authors.length - 1} co-author${item.authors.length > 2 ? 's' : ''}`
-                                : (item.authorRole || item.affiliation || "Author")}
-                            </p>
-                          </div>
-                        </div>
-
-                        {item.articleUrl && (
-                          <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                            Paper
-                          </span>
-                        )}
-                      </div>
-
-                      <span className="inline-flex items-center text-xs font-bold text-info-light group-hover:underline mt-auto">
-                        Read Story <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-1" />
-                      </span>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-              {blogs.length === 0 && (
-                <div className="col-span-full py-8 text-center text-primary-light/50 dark:text-primary/50">
-                  No conference proceedings available yet.
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Upcoming Events (Right 4 cols) */}
-          <div className="lg:col-span-4 flex flex-col gap-8">
-            <div className="flex items-end justify-between">
-              <h2 className="text-3xl md:text-4xl font-bold">Roadmap</h2>
-              <Link href="/events/deadlines" className="text-info-light font-medium hover:underline flex items-center gap-1 group">
-                More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </div>
-
-            <div className="glass rounded-[32px] p-2 flex flex-col gap-2">
-              {upcomingEvents.length === 0 && (
-                <div className="p-8 text-center text-primary-light/50 dark:text-primary/50">
-                  No roadmap events scheduled.
-                </div>
-              )}
-              {upcomingEvents.map((item, idx) => {
-                const eventDate = item.eventDate ? new Date(item.eventDate) : new Date();
-                const month = eventDate.toLocaleString('default', { month: 'short' });
-                const day = eventDate.getDate().toString();
-                // Simple start/end format for google calendar (very rudimentary)
-                const startStr = item.eventDate ? item.eventDate.replace(/-/g, '') + 'T' + (item.time ? item.time.replace(':', '') + '00Z' : '090000Z') : '20261114T090000Z';
-                const endStr = item.eventDate ? item.eventDate.replace(/-/g, '') + 'T' + '235900Z' : '20261114T170000Z';
-
-                return (
-                <motion.div 
-                  key={idx}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex gap-4 p-4 rounded-[24px] hover:bg-black/5 dark:hover:bg-white/5 transition-colors group relative"
-                >
-                  <div className="w-16 h-16 shrink-0 rounded-2xl glass flex flex-col items-center justify-center border-info-light/20 text-info-light">
-                    <span className="text-xs font-bold uppercase">{month}</span>
-                    <span className="text-xl font-numbers font-bold leading-none">{day}</span>
-                  </div>
-                  <div className="flex flex-col justify-center flex-grow">
-                    <h4 className="font-bold text-base group-hover:text-info-light transition-colors line-clamp-1">{item.title}</h4>
-                    <p className="text-sm text-primary-light/60 dark:text-primary/60 flex items-center gap-1 mt-1">
-                      <MapPin className="w-3 h-3" /> {(item.location || "TBA")}
-                    </p>
-                  </div>
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.title)}&dates=${startStr}/${endStr}&details=Join+us+for+${encodeURIComponent(item.title)}&location=${encodeURIComponent((item.location || "TBA"))}`;
-                      window.open(url, '_blank', 'noopener,noreferrer');
-                    }}
-                    title="Add to Google Calendar"
-                    className="shrink-0 flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full glass border-info-light/20 text-info-light hover:bg-info-light hover:text-white transition-all z-[20] cursor-pointer"
-                  >
-                    <CalendarPlus className="w-4 h-4" />
-                    <span className="hidden sm:inline">Add to Calendar</span>
-                  </button>
-                </motion.div>
-              ); })}
-            </div>
           </div>
         </div>
       </section>

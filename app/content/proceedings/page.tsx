@@ -359,7 +359,7 @@ export default function BlogPage() {
                   
                   {/* Title */}
                   <h3 className="text-xl font-bold mb-3 group-hover:text-info-light transition-colors line-clamp-2 leading-snug">
-                    <Link href={`/content/blog/${targetId}`}>
+                    <Link href={`/content/proceedings/${targetId}`}>
                       {title}
                     </Link>
                   </h3>
@@ -514,7 +514,7 @@ export default function BlogPage() {
                   {/* Card Bottom Links */}
                   <div className="flex items-center justify-between gap-2 pt-3 border-t border-black/5 dark:border-white/10">
                     <Link 
-                      href={`/content/blog/${targetId}`} 
+                      href={`/content/proceedings/${targetId}`} 
                       className="inline-flex items-center font-bold text-xs sm:text-sm text-info-light hover:underline transition-colors py-1"
                     >
                       Read Abstract & Story <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-1" />

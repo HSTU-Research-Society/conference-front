@@ -74,7 +74,7 @@ export default function BlogPostPage() {
           <p className="text-primary-light/60 dark:text-primary/60 mb-6 text-sm">
             The requested proceeding or paper may have been unpublished or updated in the backend conference portal.
           </p>
-          <button onClick={() => router.push('/content/blog')} className="btn-secondary text-sm inline-flex items-center gap-2">
+          <button onClick={() => router.push('/content/proceedings')} className="btn-secondary text-sm inline-flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" /> Back to Proceedings
           </button>
         </div>
@@ -107,7 +107,7 @@ export default function BlogPostPage() {
       {/* Top Navigation & Action Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <button 
-          onClick={() => router.push('/content/blog')} 
+          onClick={() => router.push('/content/proceedings')} 
           className="inline-flex items-center gap-2 text-primary-light/70 hover:text-info-light dark:text-primary/70 dark:hover:text-info-light transition-colors font-semibold text-sm"
         >
           <ChevronLeft className="w-4 h-4" /> Back to All Proceedings
@@ -370,7 +370,7 @@ export default function BlogPostPage() {
       {/* Bottom Back Button & Share */}
       <div className="pt-8 border-t border-white/10 flex items-center justify-between">
         <button 
-          onClick={() => router.push('/content/blog')} 
+          onClick={() => router.push('/content/proceedings')} 
           className="btn-secondary text-sm inline-flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" /> Back to All Proceedings
