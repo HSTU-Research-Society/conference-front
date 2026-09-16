@@ -12,21 +12,62 @@ import {
   FileText,
   Send,
   Flag,
-  Award
+  Award,
+  Bell,
+  Bookmark,
+  Users,
+  Globe,
+  GraduationCap,
+  Database
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { collection, getDocs, onSnapshot, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { LatexRenderer } from '@/components/latex-renderer';
 
-interface Milestone {
+export type MilestoneStatus = 'completed' | 'upcoming' | 'deadline' | 'highlight';
+
+export interface Milestone {
   id: string;
   title: string;
   date: string;
   time?: string;
-  isoDate: string; // for calendar export (YYYYMMDD)
+  isoDate: string; // for calendar export (YYYYMMDDTHHMMSSZ or YYYYMMDD)
   description: string;
-  status: 'completed' | 'upcoming' | 'deadline' | 'highlight';
-  icon: typeof Calendar;
+  status: MilestoneStatus;
+  icon: string;
+  order: number;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
-const MILESTONES: Milestone[] = [
+// Visual icons available from the conference backend
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  sparkles: Sparkles,
+  send: Send,
+  alertcircle: AlertCircle,
+  checkcircle2: CheckCircle2,
+  filetext: FileText,
+  award: Award,
+  flag: Flag,
+  calendar: Calendar,
+  clock: Clock,
+  bell: Bell,
+  bookmark: Bookmark,
+  users: Users,
+  globe: Globe,
+  graduationcap: GraduationCap,
+};
+
+function renderMilestoneIcon(iconName?: string, className: string = 'w-5 h-5') {
+  if (!iconName) return <Calendar className={className} />;
+  const normalized = iconName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const IconComponent = ICON_MAP[normalized] || Calendar;
+  return <IconComponent className={className} />;
+}
+
+// 9 Standard Default Milestones for ICTSET 2027 (matching backend schema)
+const DEFAULT_ICTSET_MILESTONES: Milestone[] = [
   {
     id: 'announcement',
     title: 'Event Announcement Date',
@@ -35,7 +76,8 @@ const MILESTONES: Milestone[] = [
     isoDate: '20261015T100000Z',
     description: 'Official launch of ICTSET 2027, website unveiling, tracks disclosure, and initial call for committee members.',
     status: 'completed',
-    icon: Sparkles,
+    icon: 'Sparkles',
+    order: 1,
   },
   {
     id: 'abstract-start',
@@ -45,7 +87,8 @@ const MILESTONES: Milestone[] = [
     isoDate: '20261101T000000Z',
     description: 'Portal opens for initial abstract proposals, extended summaries, and thematic track submissions.',
     status: 'upcoming',
-    icon: Send,
+    icon: 'Send',
+    order: 2,
   },
   {
     id: 'abstract-deadline',
@@ -55,7 +98,8 @@ const MILESTONES: Milestone[] = [
     isoDate: '20261215T235900Z',
     description: 'Strict cutoff for all initial abstract submissions through the online conference portal.',
     status: 'deadline',
-    icon: AlertCircle,
+    icon: 'AlertCircle',
+    order: 3,
   },
   {
     id: 'abstract-acceptance',
@@ -65,7 +109,8 @@ const MILESTONES: Milestone[] = [
     isoDate: '20270110T180000Z',
     description: 'Authors will receive peer review feedback and decisions regarding their abstract proposals.',
     status: 'upcoming',
-    icon: CheckCircle2,
+    icon: 'CheckCircle2',
+    order: 4,
   },
   {
     id: 'full-paper-start',
@@ -75,7 +120,8 @@ const MILESTONES: Milestone[] = [
     isoDate: '20270115T000000Z',
     description: 'Submission system opens for full manuscripts adhering to official conference formatting templates.',
     status: 'upcoming',
-    icon: FileText,
+    icon: 'FileText',
+    order: 5,
   },
   {
     id: 'full-paper-deadline',
@@ -85,7 +131,8 @@ const MILESTONES: Milestone[] = [
     isoDate: '20270301T235900Z',
     description: 'Final deadline for full research papers, technical reports, and survey submissions.',
     status: 'deadline',
-    icon: AlertCircle,
+    icon: 'AlertCircle',
+    order: 6,
   },
   {
     id: 'registration-deadline',
@@ -95,7 +142,8 @@ const MILESTONES: Milestone[] = [
     isoDate: '20270325T235900Z',
     description: 'Early bird and author registration deadline to guarantee inclusion in the official conference proceedings.',
     status: 'deadline',
-    icon: Award,
+    icon: 'Award',
+    order: 7,
   },
   {
     id: 'camera-ready',
@@ -105,7 +153,8 @@ const MILESTONES: Milestone[] = [
     isoDate: '20270410T235900Z',
     description: 'Final submission of revised papers incorporating reviewer feedback with copyright authorization.',
     status: 'deadline',
-    icon: FileText,
+    icon: 'FileText',
+    order: 8,
   },
   {
     id: 'conference-date',
@@ -115,18 +164,127 @@ const MILESTONES: Milestone[] = [
     isoDate: '20270514T090000Z',
     description: 'Inaugural edition of ICTSET 2027 featuring keynote addresses, technical oral sessions, and workshop tracks.',
     status: 'highlight',
-    icon: Flag,
+    icon: 'Flag',
+    order: 9,
   },
 ];
 
 export default function DeadlinesPage() {
+  const [milestones, setMilestones] = useState<Milestone[]>(DEFAULT_ICTSET_MILESTONES);
+  const [isLiveSynced, setIsLiveSynced] = useState(false);
+
+  useEffect(() => {
+    if (!db) {
+      return;
+    }
+
+    let isMounted = true;
+    let unsubDeadlines: (() => void) | null = null;
+
+    const parseDocs = (docs: any[]): Milestone[] => {
+      const parsed = docs.map((d) => {
+        const data = d.data();
+        return {
+          id: data.id || d.id,
+          title: data.title || '',
+          date: data.date || '',
+          time: data.time || '',
+          isoDate: data.isoDate || '',
+          description: data.description || '',
+          status: (data.status as MilestoneStatus) || 'upcoming',
+          icon: data.icon || 'Calendar',
+          order: typeof data.order === 'number' ? data.order : 999,
+          createdAt: data.createdAt || 0,
+          updatedAt: data.updatedAt || 0,
+        } as Milestone;
+      });
+
+      parsed.sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return (a.createdAt || 0) - (b.createdAt || 0);
+      });
+
+      return parsed;
+    };
+
+    // Primary subscription to "milestones" collection (matches backend)
+    const milestonesCol = collection(db, 'milestones');
+    const unsubMilestones = onSnapshot(
+      milestonesCol,
+      (snap) => {
+        if (!isMounted) return;
+        if (!snap.empty) {
+          setMilestones(parseDocs(snap.docs));
+          setIsLiveSynced(true);
+        } else {
+          // Secondary fallback to "deadlines" collection
+          const deadlinesCol = collection(db, 'deadlines');
+          unsubDeadlines = onSnapshot(
+            deadlinesCol,
+            (deadlinesSnap) => {
+              if (!isMounted) return;
+              if (!deadlinesSnap.empty) {
+                setMilestones(parseDocs(deadlinesSnap.docs));
+                setIsLiveSynced(true);
+              }
+            },
+            (err) => {
+              console.warn('Fallback deadlines listener error:', err);
+            }
+          );
+        }
+      },
+      (err) => {
+        console.warn('Milestones listener error, attempting one-time fetch:', err);
+        // Resilient fallback query
+        getDocs(query(collection(db, 'milestones')))
+          .then((snap) => {
+            if (!isMounted) return;
+            if (!snap.empty) {
+              setMilestones(parseDocs(snap.docs));
+              setIsLiveSynced(true);
+            } else {
+              return getDocs(query(collection(db, 'deadlines')));
+            }
+          })
+          .then((deadlinesSnap) => {
+            if (!isMounted || !deadlinesSnap) return;
+            if (!deadlinesSnap.empty) {
+              setMilestones(parseDocs(deadlinesSnap.docs));
+              setIsLiveSynced(true);
+            }
+          })
+          .catch((fetchErr) => {
+            console.warn('Database fetch fallback notice:', fetchErr);
+          });
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      unsubMilestones();
+      if (unsubDeadlines) unsubDeadlines();
+    };
+  }, []);
+
   const handleAddToCalendar = (milestone: Milestone) => {
-    const endStr = milestone.isoDate;
+    let startStr = (milestone.isoDate || '').trim().replace(/[^0-9TZ]/g, '');
+    if (!startStr) {
+      const d = new Date(milestone.date);
+      if (!isNaN(d.getTime())) {
+        startStr = d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      } else {
+        startStr = '20261215T235900Z';
+      }
+    }
+    const endStr = startStr;
+    const cleanDesc = (milestone.description || '').replace(/<[^>]+>/g, '').replace(/[#*_`]/g, '');
+
     const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
       `ICTSET: ${milestone.title}`
-    )}&dates=${milestone.isoDate}/${endStr}&details=${encodeURIComponent(
-      milestone.description
-    )}&location=${encodeURIComponent('ICTSET Conference Portal / HSTU')}`;
+    )}&dates=${startStr}/${endStr}&details=${encodeURIComponent(
+      cleanDesc
+    )}&location=${encodeURIComponent('ICTSET 2027 Conference Portal / HSTU')}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -137,7 +295,7 @@ export default function DeadlinesPage() {
         description="Chronological schedule of key dates, paper submission cutoffs, and conference proceedings." 
       />
 
-      {/* Overview Notice Box */}
+      {/* Overview Notice Box with live database connection indicator */}
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -149,9 +307,16 @@ export default function DeadlinesPage() {
             <Calendar className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-primary-light dark:text-primary mb-1">
-              ICTSET 2027 Important Dates
-            </h3>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-lg font-bold text-primary-light dark:text-primary">
+                ICTSET 2027 Important Dates
+              </h3>
+              {isLiveSynced && (
+                <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <Database className="w-2.5 h-2.5" /> Live Synced
+                </span>
+              )}
+            </div>
             <p className="text-sm text-primary-light/70 dark:text-primary/70 max-w-2xl">
               All deadlines are strict and correspond to 23:59 UTC unless specifically stated otherwise. 
               Please synchronize important dates to your personal calendar.
@@ -174,10 +339,8 @@ export default function DeadlinesPage() {
         />
 
         <div className="space-y-8 sm:space-y-10">
-          {MILESTONES.map((item, idx) => {
-            const Icon = item.icon;
-            
-            // Badge color mapping
+          {milestones.map((item, idx) => {
+            // Badge color and styling mapping
             const getStatusBadge = () => {
               switch (item.status) {
                 case 'completed':
@@ -209,7 +372,7 @@ export default function DeadlinesPage() {
 
             return (
               <motion.div
-                key={item.id}
+                key={item.id || idx}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
@@ -289,15 +452,15 @@ export default function DeadlinesPage() {
                         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                         : 'bg-info-light/10 text-info-light'
                     }`}>
-                      <Icon className="w-5 h-5" />
+                      {renderMilestoneIcon(item.icon, 'w-5 h-5')}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-lg sm:text-xl font-extrabold text-primary-light dark:text-primary mb-1.5 leading-snug">
                         {item.title}
                       </h3>
-                      <p className="text-sm text-primary-light/70 dark:text-primary/70 leading-relaxed">
-                        {item.description}
-                      </p>
+                      <div className="text-sm text-primary-light/70 dark:text-primary/70 leading-relaxed">
+                        <LatexRenderer content={item.description} />
+                      </div>
                     </div>
                   </div>
                 </div>
